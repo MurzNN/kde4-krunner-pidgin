@@ -97,7 +97,13 @@ void PidginRunner::match(Plasma::RunnerContext &context)
 	    QDBusReply<QString>contactName = pidginDBus.call("PurpleBuddyGetName",buddyId);
 	    //Get Buddy Alias
 	    QDBusReply<QString>contactNameAlias = pidginDBus.call("PurpleBuddyGetAlias",buddyId);
-	    
+      //Get Buddy Acount
+      QDBusReply<qint32>protocolIdReply = pidginDBus.call("PurpleBuddyGetAccount",buddyId);
+      //Get Protocol name
+      qint32 protocolId = protocolIdReply.value();
+      QDBusReply<QString>contactProtocol = pidginDBus.call("PurpleAccountGetProtocolName",protocolId);
+      //Get Protocol username
+      QDBusReply<QString>contactProtocolLogin = pidginDBus.call("PurpleAccountGetUsername",protocolId);
 	    
 	    //set a flag if we found a match!
 	    bool matchedName = contactName.value().contains(searchedName, Qt::CaseInsensitive);
@@ -111,11 +117,7 @@ void PidginRunner::match(Plasma::RunnerContext &context)
 
 		matchItem.setIcon(c_icon);
 		
-		if (matchedName) {
-		matchItem.setText(contactName);
-		} else {
-		  matchItem.setText(contactNameAlias);
-		}
+    matchItem.setText(contactNameAlias + " <" + contactName + "> " /*+ QString::number(buddyId)*/);
 		
 		//Status message
 		// 1 = Online 0 = Offline
@@ -126,7 +128,7 @@ void PidginRunner::match(Plasma::RunnerContext &context)
 		    statusMessage = "Online";
 		}
 		
-		matchItem.setSubtext(statusMessage);
+    matchItem.setSubtext(/* "Account: " + QString::number(protocolId) + "-" + */ contactProtocol + ":" + contactProtocolLogin + " Status: " + statusMessage);
 		
 		//Store contact's ID
 		QString buddyIdString = QString::number(buddyId);
